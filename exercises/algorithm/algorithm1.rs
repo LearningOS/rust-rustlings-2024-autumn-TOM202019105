@@ -2,13 +2,14 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
+use std::cmp::{PartialEq,PartialOrd};
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
+use std::marker::Copy;
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 struct Node<T> {
     val: T,
     next: Option<NonNull<Node<T>>>,
@@ -69,15 +70,66 @@ impl<T> LinkedList<T> {
             },
         }
     }
+}
+
+impl<T:PartialOrd + Copy> LinkedList<T>{
+
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
+        
 		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+		//Self {
+        //    length: 0,
+        //    start: None,
+        //    end: None,
+        //}
+        if list_a.length == 0 {
+            return list_b;
         }
+
+        if list_b.length == 0 {
+            return list_a;
+        }
+
+        let mut new_ll = LinkedList::new();
+
+        let mut head_ptr_a = list_a.start;
+        let mut head_ptr_b = list_b.start;
+
+        while !(head_ptr_a == None && head_ptr_b == None) {
+            if head_ptr_a == None {
+                while head_ptr_b != None {
+                    new_ll.add(unsafe{(*head_ptr_b.unwrap().as_ptr()).val});
+                    head_ptr_b = unsafe{(*head_ptr_b.unwrap().as_ptr()).next};
+                }
+                break;
+            }
+
+            if head_ptr_b == None {
+                while head_ptr_a != None {
+                    new_ll.add(unsafe{(*head_ptr_a.unwrap().as_ptr()).val});
+                    head_ptr_a = unsafe{(*head_ptr_a.unwrap().as_ptr()).next};
+                }
+                break;
+            }
+
+            let val_a = unsafe{(*head_ptr_a.unwrap().as_ptr()).val};
+            let val_b = unsafe{(*head_ptr_b.unwrap().as_ptr()).val};
+
+            if val_a < val_b {
+                new_ll.add(val_a);
+                head_ptr_a = unsafe{(*head_ptr_a.unwrap().as_ptr()).next};
+            } else {
+                new_ll.add(val_b);
+                head_ptr_b = unsafe{(*head_ptr_b.unwrap().as_ptr()).next};
+            }
+
+        }
+
+        new_ll
 	}
+
+
 }
 
 impl<T> Display for LinkedList<T>

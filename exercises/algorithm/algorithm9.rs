@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -11,17 +10,19 @@ pub struct Heap<T>
 where
     T: Default,
 {
+    iter_count:usize,
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
 }
 
-impl<T> Heap<T>
+impl<T:> Heap<T>
 where
-    T: Default,
+    T: Default + std::cmp::PartialOrd,
 {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
+            iter_count:1,
             count: 0,
             items: vec![T::default()],
             comparator,
@@ -38,6 +39,27 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        
+        self.count += 1;
+        self.items.push(value);
+        let mut v = &mut self.items;
+
+        if self.count == 1 {
+            return;
+        }
+        let mut swap_flag = false;
+        let mut idx = self.count;
+        while (self.comparator)(&v[idx],&v[idx/2]) {
+            v.swap(idx,idx/2);
+            swap_flag = true;
+            idx = idx/2;
+            if idx == 1 {
+                if swap_flag { self.iter_count = idx; }
+                return;
+            }
+        }
+        
+        if swap_flag { self.iter_count = idx; }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -45,7 +67,7 @@ where
     }
 
     fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) <= self.count
+        self.left_child_idx(idx) <= self.count //return not_leaf
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
@@ -58,7 +80,11 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+		if self.items[self.left_child_idx(idx)] < self.items[self.right_child_idx(idx)] {
+            self.left_child_idx(idx)
+        } else {
+            self.right_child_idx(idx)
+        }
     }
 }
 
@@ -77,7 +103,7 @@ where
     }
 }
 
-impl<T> Iterator for Heap<T>
+impl<T:Copy> Iterator for Heap<T>
 where
     T: Default,
 {
@@ -85,7 +111,13 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+		if self.iter_count <= self.count {
+            let ret = Some(self.items[self.iter_count]);
+            self.iter_count += 1;
+            ret
+        } else {
+            None
+        }
     }
 }
 
@@ -129,11 +161,15 @@ mod tests {
         heap.add(2);
         heap.add(9);
         heap.add(11);
+        
         assert_eq!(heap.len(), 4);
         assert_eq!(heap.next(), Some(2));
         assert_eq!(heap.next(), Some(4));
         assert_eq!(heap.next(), Some(9));
         heap.add(1);
+        //for i in heap.items.iter() {
+        //    println!("{}",i);
+        //}
         assert_eq!(heap.next(), Some(1));
     }
 
